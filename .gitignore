@@ -1,0 +1,60 @@
+# =========================
+# Go (backend)
+# =========================
+
+# Скомпилированные бинарники
+/backend/bin/
+/backend/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Кеш тестов Go
+*.test
+
+# Модуль vendor (если не используешь)
+# Убери этот пункт, если хочешь хранить vendor
+/backend/vendor/
+
+# =========================
+# Node / React (frontend)
+# =========================
+
+/frontend/node_modules/
+/frontend/build/
+/frontend/dist/
+
+# Логи
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# env файлы
+/frontend/.env
+/backend/.env
+
+# =========================
+# Docker
+# =========================
+/docker-data/
+/docker/volumes/
+
+# =========================
+# OS / temp
+# =========================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+
+.vscode/
+.idea/
+*.swp
