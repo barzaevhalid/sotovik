@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    container_name: shop-backend-dev
+    container_name: sotovik-backend-dev
     volumes:
       - ./backend:/app
     env_file:
@@ -15,7 +15,7 @@ services:
 
   db:
     image: postgres:16
-    container_name: shop-db-dev
+    container_name: sotovik-db-dev
     restart: always
     env_file:
       - .env

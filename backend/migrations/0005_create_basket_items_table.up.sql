@@ -1,0 +1,10 @@
+CREATE TABLE basket_items (
+    id SERIAL PRIMARY KEY,
+    basket_id INTEGER NOT NULL REFERENCES basket(id),
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    quantity INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
+);
+
+CREATE UNIQUE INDEX idx_basket_item_unique ON basket_items(basket_id, item_id);
