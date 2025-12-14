@@ -1,6 +1,6 @@
 CREATE TABLE basket_items (
     id SERIAL PRIMARY KEY,
-    basket_id INTEGER NOT NULL REFERENCES basket(id),
+    basket_id INTEGER NOT NULL REFERENCES baskets(id),
     item_id INTEGER NOT NULL REFERENCES items(id),
     quantity INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT now(),
