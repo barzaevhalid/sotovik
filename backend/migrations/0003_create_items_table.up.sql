@@ -1,6 +1,6 @@
 CREATE TABLE items (
     id SERIAL PRIMARY KEY,
-    title VARCHAR NOT NULL,
+    title VARCHAR(255) NOT NULL,
     description TEXT,
     image_url VARCHAR,
     price INTEGER NOT NULL,           -- цена в рублях, целое число
