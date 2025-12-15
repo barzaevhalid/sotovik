@@ -23,7 +23,9 @@ func main() {
 	}
 	defer pool.Close()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName: "Sotovik API",
+	})
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Server OK")
@@ -34,6 +36,7 @@ func main() {
 		port = "8080"
 	}
 
-	log.Println("Server running on port", port)
-	log.Fatal(app.Listen(":" + port)) // <- блокирует поток
+	if err := app.Listen(":" + port); err != nil {
+		log.Fatalf("Error starting server: %v\n", err)
+	}
 }
