@@ -5,7 +5,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/barzaevhalid/sotovik/internal/api/user"
 	"github.com/barzaevhalid/sotovik/internal/configs"
+
 	"github.com/barzaevhalid/sotovik/pkg/db"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -27,9 +29,12 @@ func main() {
 		AppName: "Sotovik API",
 	})
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Server OK")
-	})
+	userRepo := user.NewUserRepository(pool)
+	userService := user.NewUserService(userRepo)
+	userHandler := user.NewUserHandler(userService)
+
+	api := app.Group("/api")
+	userHandler.RegisterRoutes(api)
 
 	port := os.Getenv("PORT")
 	if port == "" {

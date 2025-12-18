@@ -5,7 +5,7 @@ CREATE TABLE order_items (
     product_id INT NOT NULL,      -- какой товар купили
 
     quantity INT NOT NULL,        -- сколько купили
-    price NUMERIC(10,2) NOT NULL, -- цена за 1 шт НА МОМЕНТ ПОКУПКИ
+    price INT NOT NULL, -- цена за 1 шт НА МОМЕНТ ПОКУПКИ
 
     created_at TIMESTAMP DEFAULT now(),
 
