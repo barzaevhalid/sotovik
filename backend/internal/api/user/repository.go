@@ -2,7 +2,12 @@ package user
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/barzaevhalid/sotovik/internal/domain"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -31,7 +36,16 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 
 	err := r.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash, user.Store, user.Phone).Scan(&user.ID, &user.Role, &user.IsBlocked)
 
-	return err
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return domain.ErrUserAlreadyExists
+			}
+		}
+		return fmt.Errorf("create user: %w", err)
+	}
+	return nil
 }
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*User, error) {
@@ -40,7 +54,10 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*User, e
 	err := r.db.QueryRow(ctx, query, email).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.Role, &user.IsBlocked, &user.Store, &user.Phone)
 
 	if err != nil {
-		return nil, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrUserNotFound
+		}
+		return nil, fmt.Errorf("get user by email: %w", err)
 	}
 	return user, nil
 }

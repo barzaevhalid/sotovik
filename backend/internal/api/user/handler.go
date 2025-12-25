@@ -1,9 +1,11 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/barzaevhalid/sotovik/internal/domain"
 	"github.com/barzaevhalid/sotovik/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -40,7 +42,13 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	token, refreshToken, err := h.userService.Register(c.Context(), req.Username, req.Email, req.Password, req.Phone)
 
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		switch {
+		case errors.Is(err, domain.ErrUserAlreadyExists):
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "user already exists"})
+		default:
+			//сделать логирование ошибки тут
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
 	}
 
 	c.Cookie(&fiber.Cookie{
@@ -60,12 +68,13 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	var req LoginRequest
 
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "wrong email or password"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
 	}
-	token, err := h.userService.Login(c.Context(), req.Email, req.Password)
 
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot find the user"})
+	token, err := h.userService.Login(c.Context(), req.Email, req.Password)
+	if errors.Is(err, ErrInvalidCredentials) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "wrong email or password"})
+
 	}
 
 	return c.JSON(fiber.Map{

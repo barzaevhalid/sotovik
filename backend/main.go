@@ -7,6 +7,8 @@ import (
 
 	"github.com/barzaevhalid/sotovik/internal/api/user"
 	"github.com/barzaevhalid/sotovik/internal/configs"
+	"github.com/barzaevhalid/sotovik/internal/logger"
+	"github.com/barzaevhalid/sotovik/internal/middleware"
 
 	"github.com/barzaevhalid/sotovik/pkg/db"
 	"github.com/gofiber/fiber/v2"
@@ -26,8 +28,11 @@ func main() {
 	defer pool.Close()
 
 	app := fiber.New(fiber.Config{
-		AppName: "Sotovik API",
+		AppName:      "Sotovik API",
+		ErrorHandler: middleware.ErrorHandler,
 	})
+	logger.Init()
+	defer logger.Log.Sync()
 
 	userRepo := user.NewUserRepository(pool)
 	userService := user.NewUserService(userRepo)

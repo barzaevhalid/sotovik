@@ -2,13 +2,14 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 
+	"github.com/barzaevhalid/sotovik/internal/domain"
 	"github.com/barzaevhalid/sotovik/utils"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,14 +23,14 @@ func NewUserService(repo *UserRepository) *UserService {
 
 func (s *UserService) Register(ctx context.Context, username, email, password, phone string) (string, string, error) {
 
-	existing, err := s.repo.GetByEmail(ctx, email)
+	// existing, err := s.repo.GetByEmail(ctx, email)
 
-	if err != nil && err != pgx.ErrNoRows {
-		return "", "", err
-	}
-	if existing != nil {
-		return "", "", fmt.Errorf("email already exists")
-	}
+	// if err != nil && errors.Is(err, pgx.ErrNoRows) {
+	// 	return "", "", fmt.Errorf("get user by email: %w", err)
+	// }
+	// if existing != nil {
+	// 	return "", "", domain.ErrUserAlreadyExists
+	// }
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
@@ -102,18 +103,20 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 	user, err := s.repo.GetByEmail(ctx, email)
 
 	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return "", ErrInvalidCredentials
+		}
 		return "", err
 	}
-	fmt.Println(user.PasswordHash)
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
-
 	if err != nil {
-		return "", err
+		return "", ErrInvalidCredentials
 	}
-	token, err := utils.GenerateJWT(user.ID, user.Role)
 
+	token, err := utils.GenerateJWT(user.ID, user.Role)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("generate jwt: %w", err)
 	}
 	return token, nil
 }

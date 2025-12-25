@@ -21,7 +21,7 @@ func GenerateJWT(userId int64, role string) (string, error) {
 func GenerateRefreshToken(userId int64) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": strconv.FormatInt(userId, 10),
-		"exp": time.Now().Add(30 * 24 * time.Hour).Unix(), // 30 дней
+		"exp": time.Now().Add(30 * 24 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("REFRESH_SECRET")))
