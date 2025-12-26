@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/barzaevhalid/sotovik/internal/domain"
+	"github.com/barzaevhalid/sotovik/internal/models"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -19,7 +20,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) Create(ctx context.Context, user *User) error {
+func (r *UserRepository) Create(ctx context.Context, user *models.User) error {
 
 	query := `
 	INSERT INTO users (
@@ -48,27 +49,30 @@ func (r *UserRepository) Create(ctx context.Context, user *User) error {
 	return nil
 }
 
-func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*User, error) {
-	user := &User{}
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	user := &models.User{}
 	query := `SELECT  id, username, email, password_hash ,role, is_blocked, store, phone FROM users  WHERE email=$1`
 	err := r.db.QueryRow(ctx, query, email).Scan(&user.ID, &user.Username, &user.Email, &user.PasswordHash, &user.Role, &user.IsBlocked, &user.Store, &user.Phone)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, domain.ErrUserNotFound
+			return nil, err
 		}
 		return nil, fmt.Errorf("get user by email: %w", err)
 	}
 	return user, nil
 }
 
-func (r *UserRepository) GetById(ctx context.Context, id int64) (*User, error) {
-	user := &User{}
+func (r *UserRepository) GetById(ctx context.Context, id int64) (*models.User, error) {
+	user := &models.User{}
 	query := `SELECT  id, username, email, role, is_blocked, store, phone FROM users  WHERE id=$1`
 	err := r.db.QueryRow(ctx, query, id).Scan(&user.ID, &user.Username, &user.Email, &user.Role, &user.IsBlocked, &user.Store, &user.Phone)
 
 	if err != nil {
-		return nil, err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("get user by email: %w", err)
 	}
 	return user, nil
 }

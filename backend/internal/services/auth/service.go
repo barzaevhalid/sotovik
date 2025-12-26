@@ -1,4 +1,4 @@
-package user
+package auth
 
 import (
 	"context"
@@ -8,29 +8,23 @@ import (
 	"strconv"
 
 	"github.com/barzaevhalid/sotovik/internal/domain"
+	"github.com/barzaevhalid/sotovik/internal/models"
+	"github.com/barzaevhalid/sotovik/internal/repository/user"
 	"github.com/barzaevhalid/sotovik/utils"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
-	repo *UserRepository
+	repo *user.UserRepository
 }
 
-func NewUserService(repo *UserRepository) *UserService {
+func NewUserService(repo *user.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
 func (s *UserService) Register(ctx context.Context, username, email, password, phone string) (string, string, error) {
-
-	// existing, err := s.repo.GetByEmail(ctx, email)
-
-	// if err != nil && errors.Is(err, pgx.ErrNoRows) {
-	// 	return "", "", fmt.Errorf("get user by email: %w", err)
-	// }
-	// if existing != nil {
-	// 	return "", "", domain.ErrUserAlreadyExists
-	// }
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
@@ -38,7 +32,7 @@ func (s *UserService) Register(ctx context.Context, username, email, password, p
 		return "", "", err
 	}
 
-	user := &User{
+	user := &models.User{
 		Username:     username,
 		Email:        email,
 		PasswordHash: string(hash),
@@ -88,7 +82,7 @@ func (s *UserService) VerifyRefreshToken(tokenStr string) (int64, error) {
 	return userId, nil
 }
 
-func (s *UserService) GetById(ctx context.Context, id int64) (*User, error) {
+func (s *UserService) GetById(ctx context.Context, id int64) (*models.User, error) {
 	user, err := s.repo.GetById(ctx, id)
 
 	if err != nil {
@@ -103,15 +97,15 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 	user, err := s.repo.GetByEmail(ctx, email)
 
 	if err != nil {
-		if errors.Is(err, domain.ErrNotFound) {
-			return "", ErrInvalidCredentials
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", domain.ErrInvalidCredentials
 		}
 		return "", err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return "", ErrInvalidCredentials
+		return "", domain.ErrInvalidCredentials
 	}
 
 	token, err := utils.GenerateJWT(user.ID, user.Role)

@@ -5,10 +5,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/barzaevhalid/sotovik/internal/api/user"
 	"github.com/barzaevhalid/sotovik/internal/configs"
+	authHandler "github.com/barzaevhalid/sotovik/internal/handler/auth"
 	"github.com/barzaevhalid/sotovik/internal/logger"
-	"github.com/barzaevhalid/sotovik/internal/middleware"
+	"github.com/barzaevhalid/sotovik/internal/repository/user"
+	authService "github.com/barzaevhalid/sotovik/internal/services/auth"
 
 	"github.com/barzaevhalid/sotovik/pkg/db"
 	"github.com/gofiber/fiber/v2"
@@ -28,15 +29,14 @@ func main() {
 	defer pool.Close()
 
 	app := fiber.New(fiber.Config{
-		AppName:      "Sotovik API",
-		ErrorHandler: middleware.ErrorHandler,
+		AppName: "Sotovik API",
 	})
 	logger.Init()
 	defer logger.Log.Sync()
 
 	userRepo := user.NewUserRepository(pool)
-	userService := user.NewUserService(userRepo)
-	userHandler := user.NewUserHandler(userService)
+	userService := authService.NewUserService(userRepo)
+	userHandler := authHandler.NewUserHandler(userService)
 
 	api := app.Group("/api")
 	userHandler.RegisterRoutes(api)

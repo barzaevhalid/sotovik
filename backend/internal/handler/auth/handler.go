@@ -1,4 +1,4 @@
-package user
+package auth
 
 import (
 	"errors"
@@ -6,15 +6,17 @@ import (
 	"time"
 
 	"github.com/barzaevhalid/sotovik/internal/domain"
+	"github.com/barzaevhalid/sotovik/internal/services/auth"
+
 	"github.com/barzaevhalid/sotovik/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
 type UserHandler struct {
-	userService *UserService
+	userService *auth.UserService
 }
 
-func NewUserHandler(service *UserService) *UserHandler {
+func NewUserHandler(service *auth.UserService) *UserHandler {
 	return &UserHandler{
 		userService: service,
 	}
@@ -70,13 +72,19 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
 	}
-
+	//	добавить рефреш токен
 	token, err := h.userService.Login(c.Context(), req.Email, req.Password)
-	if errors.Is(err, ErrInvalidCredentials) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "wrong email or password"})
 
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrInvalidCredentials):
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid email or password"})
+		default:
+			fmt.Println("error")
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
+		}
 	}
-
+	//	добавить рефреш токен
 	return c.JSON(fiber.Map{
 		"access_token": token,
 	})
@@ -91,8 +99,6 @@ func (h *UserHandler) Refresh(c *fiber.Ctx) error {
 	}
 
 	userId, err := h.userService.VerifyRefreshToken(cookie)
-
-	fmt.Println(userId, "=----")
 
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid refresh token"})
