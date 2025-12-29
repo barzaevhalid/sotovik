@@ -7,7 +7,7 @@ CREATE TABLE users (
     CHECK (role IN ('customer', 'wholesaler', 'admin')),
     is_blocked BOOLEAN DEFAULT false,
     store VARCHAR(255),
-    phone VARCHAR(50) NOT NULL,
+    phone VARCHAR(50),
     
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now()

@@ -1,13 +1,17 @@
 CREATE TABLE items (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
+
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    image_url VARCHAR(255),
-    price INTEGER NOT NULL,           -- цена в рублях, целое число
-    wholesale_price INTEGER,          -- оптовая цена
-    is_active BOOLEAN DEFAULT true,
-    in_stock BOOLEAN DEFAULT true,
-    category_id INTEGER NOT NULL REFERENCES categories(id),
-    created_at TIMESTAMP DEFAULT now(),
-    updated_at TIMESTAMP DEFAULT now()
+
+    price INTEGER NOT NULL CHECK (price >= 0),          -- цена в КОПЕЙКАХ
+    wholesale_price INTEGER CHECK (wholesale_price >= 0),
+
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    in_stock INTEGER NOT NULL DEFAULT 0 CHECK (in_stock >= 0),
+
+    category_id BIGINT NOT NULL REFERENCES categories(id),
+
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now()
 );
